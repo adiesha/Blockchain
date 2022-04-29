@@ -44,6 +44,12 @@ class Block:
         result = blockid + nonceString + coinbase + transactiondata + prev
         return result
 
+    def getHash(self):
+        text = self.gethashablestring()
+        encodedText = text.encode()
+        temphash = hashlib.sha256(encodedText).hexdigest()
+        return temphash
+
     def getTransactionsStringFromcache(self):
         if self.trasactionstring is None:
             self.trasactionstring = self.createTransactionDataString()

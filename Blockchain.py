@@ -1,4 +1,7 @@
+import random
+
 from Block import Block
+from Transaction import Transaction
 
 
 class Blockchain:
@@ -28,8 +31,24 @@ class Blockchain:
         else:
             return self.last.id
 
-    def validateBlock(self):
-        pass
+    def validateBlock(self, block, data=None):
+        if data is None:
+            data = self.data
+
+        for tr in block.transactions:
+            sender = tr.sender
+            receiver = tr.recipient
+            amount = tr.amount
+            if sender in data:
+                if data[sender] >= amount:
+                    pass
+                else:
+                    print("Does not have enough balance in sender {0} Amount:{1}".format(sender, data[sender]))
+                    return False
+            else:
+                print("Sender not in the block chain {0}".format(sender))
+                return False
+        return True
 
     def addNewBlockToChain(self, block):
         temp = self.last
@@ -51,4 +70,57 @@ class Blockchain:
                 temp = temp.prev
 
     def extractData(self):
-        pass
+        temp = []
+        block = self.last
+        while block is not None:
+            temp.append(block)
+            block = block.prev
+        print(temp)
+
+        data = {}
+        while temp:
+            bl = temp.pop()
+            coinbase = bl.coinbase
+            if coinbase[0] is not None:
+                if coinbase[0] in data:
+                    data[coinbase[0]] = data[coinbase[0]] + coinbase[1]
+                else:
+                    data[coinbase[0]] = coinbase[1]
+
+            for tr in bl.transactions:
+                sender = tr.sender
+                receiver = tr.recipient
+                amount = tr.amount
+                if sender in data:
+                    data[sender] = data[sender] - amount
+                else:
+                    print("Error: No sender in the data")
+                    return None
+                if receiver in data:
+                    data[receiver] = data[receiver] + amount
+                else:
+                    data[receiver] = amount
+            print(data)
+            self.data = data
+
+    def createSetOfTransacations(self):
+        temptr = []
+        if self.data is None:
+            return []
+        else:
+            noOftransactions = random.randint(1, 10)
+            print("Selected transaction amount {0}".format(noOftransactions))
+            keys = list(self.data.keys())
+            while (noOftransactions > 0 and keys):
+                choice = random.choice(keys)
+                keys.remove(choice)
+                sendersbalance = self.data[choice]
+                amount = random.randint(1, sendersbalance)
+                tr = Transaction()
+                tr.sender = choice
+                tr.recipient = random.randint(0, 10)
+                tr.amount = amount
+                noOftransactions -= 1
+                temptr.append(tr)
+
+            return temptr
