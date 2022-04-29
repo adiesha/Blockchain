@@ -7,12 +7,15 @@ class Block:
         self.id = id
         self.nonce = 0
         self.transactions = []
-        self.prev = ''.join('0' for i in range(64))
+        self.prev = None
+        self.next = None
+        self.prevhash = ''.join('0' for i in range(64))
         self.hash = None
         self.maxNonce = 50000000
-        self.difficultySize = 5
+        self.difficultySize = 4
         self.difficultyprefix = ''.join('0' for i in range(self.difficultySize))
         self.trasactionstring = None
+        self.coinbase = (None, 0)
 
     def mine(self):
         start = time.perf_counter()
@@ -23,6 +26,7 @@ class Block:
             temphash = hashlib.sha256(encodedText).hexdigest()
             if temphash[0:self.difficultySize] == self.difficultyprefix:
                 print("hash mined {0}".format(temphash))
+                self.hash = temphash
                 end = time.perf_counter()
                 return temphash, self.nonce, end - start
             else:
@@ -34,9 +38,10 @@ class Block:
     def gethashablestring(self):
         blockid = str(self.id)
         nonceString = str(self.nonce)
+        coinbase = str(self.coinbase)
         transactiondata = self.getTransactionsStringFromcache()
-        prev = self.prev
-        result = blockid + nonceString + transactiondata + prev
+        prev = self.prevhash
+        result = blockid + nonceString + coinbase + transactiondata + prev
         return result
 
     def getTransactionsStringFromcache(self):
@@ -55,6 +60,17 @@ class Block:
     def addTransaction(self, tr):
         self.transactions.append(tr)
 
+    def addTransactions(self, trarray):
+        self.transactions = trarray
+
     def printTransactions(self):
+        print("Coin base: {0} -> {1}".format(self.coinbase[1], self.coinbase[0]))
         for t in self.transactions:
             print(t)
+
+    def __str__(self):
+        return "BlockID: {0} Nonce: {1} CoindBase: {2} Tr: {3} PreviousHash : {4} Hash:{5}".format(self.id, self.nonce,
+                                                                                                   self.coinbase,
+                                                                                                   self.transactions,
+                                                                                                   self.prevhash,
+                                                                                                   self.hash)
