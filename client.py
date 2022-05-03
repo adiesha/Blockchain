@@ -150,20 +150,12 @@ class Client():
                             self.map = message
                             print("Updated Map: ", self.map)
 
-    # def createThreadToListen(self):
-    #     thread = threading.Thread(target=self.ReceiveMessageFunct)
-    #     thread.daemon = True
-    #     thread.start()
-    #     return thread
-    #
-    # def broadcast(self, event, nodes, slot):
-    #     for node in nodes:
-    #         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    #             s.connect((self.HOST, int(self.map[node])))
-    #             strReq = self.createJSONReq(event, node, slot)
-    #             jsonReq = json.dumps(strReq)
-    #             s.sendall(str.encode(jsonReq))
-    #             s.close()
+    def createThreadToListen(self):
+        thread = threading.Thread(target=self.ReceiveMessageFunct)
+        thread.daemon = True
+        thread.start()
+        return thread
+
     #
     # def createThreadToBroadcast(self, event, nodes, slot):
     #     thread = threading.Thread(target=self.broadcast(event, nodes, slot))
@@ -177,9 +169,9 @@ class Client():
 
     def ReceiveMessageFunct(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            print("started listening to clientip {0} port {1}".format(self.clientip, self.clientPort))
+            print("Started listening to clientip {0} port {1}".format(self.clientip, self.clientPort))
             s.bind((self.clientip, self.clientPort))
-            while (True):
+            while True:
                 s.listen()
                 conn, addr = s.accept()
                 with conn:
@@ -195,14 +187,19 @@ class Client():
                         logging.debug(unpickledRequest)
                         if isinstance(unpickledRequest, dict):
                             # join the partial log
-                            np = unpickledRequest['pl']
-                            mtx = unpickledRequest['mtx']
-                            nid = unpickledRequest['nodeid']
+                            # np = unpickledRequest['pl']
+                            # mtx = unpickledRequest['mtx']
+                            # nid = unpickledRequest['nodeid']
+                            print(unpickledRequest)
+                            nid = unpickledRequest['id']
+                            msg = unpickledRequest['msg']
+                            print(nid, msg)
 
-                            self.dd.receiveMessage((np, mtx, nid))
-                            conflicts = self.dd.checkConflictingAppnmts()
-                            for c in conflicts:
-                                self.dd.cancelAppointment((c.timeslot, c))
+                            # self.bc.receiveMessage((np, mtx, nid))
+
+                            # conflicts = self.dd.checkConflictingAppnmts()
+                            # for c in conflicts:
+                            #     self.dd.cancelAppointment((c.timeslot, c))
 
                             # create message receive event
                             # send the message success request
@@ -213,7 +210,7 @@ class Client():
                             try:
                                 conn.sendall(pickledMessage)
                             except:
-                                print("Problem occurred while sending the reply to node {0}".format(nid))
+                                print("Problem occurred while sending the reply to node {0}".format("jhgjy"))
                         else:
                             response = {"response": "Failed", "error": "Request should be a dictionary"}
                             # the_encoding = chardet.detect(pickle.dumps(response))['encoding']
@@ -258,12 +255,13 @@ class Client():
                 print(bc.last)
             elif resp[0] == 'b':
                 self.bc.createAblock(bc.createSetOfTransacations())
+            elif resp[0] == 's':
+                self.bc.sendMessage()
             elif resp[0] == 'q':
                 print("Quitting")
                 break
             elif resp[0] == 'e':
                 self.bc.extractData()
-
 
     def main(self):
         print('Number of arguments:', len(sys.argv), 'arguments.')
@@ -300,9 +298,11 @@ class Client():
             print("Started Creating the Distributed Calendar")
             self.map = self.getMapData()
             blockchain = Blockchain(self.seq)
+            blockchain.map = self.map
             self.bc = blockchain
             # self.createThreadToListen()
             # self.createHeartBeatThread()
+            self.createThreadToListen()
             self.menu(blockchain)
 
 

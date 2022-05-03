@@ -1,4 +1,7 @@
+import pickle
 import random
+import socket
+import logging
 
 from Block import Block
 from Transaction import Transaction
@@ -10,6 +13,7 @@ class Blockchain:
         self.last = None
         self.first = None
         self.data = {}
+        self.map = None
 
     def __str__(self):
         return "Data {0}".format(self.data)
@@ -124,3 +128,37 @@ class Blockchain:
                 temptr.append(tr)
 
             return temptr
+
+    def sendMessage(self):
+        for k, v in self.map.items():
+            if k != self.clientid:
+                self.sendViaSocket(k, self.last)
+
+    def sendViaSocket(self, k, m):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.connect((self.map[k][0], int(self.map[k][1])))
+
+                strReq = {}
+                strReq['id'] = self.clientid
+                strReq['msg'] = m
+
+                pickledMessage = pickle.dumps(strReq)
+                s.sendall(pickledMessage)
+                data = self.receiveWhole(s)
+                print(data)
+                print(pickle.loads(data))
+            except ConnectionRefusedError:
+                print("Connection cannot be established to node {0}".format(k))
+                logging.error("Connection cannot be established to node {0}".format(k))
+
+    def receiveWhole(self, s):
+        BUFF_SIZE = 4096  # 4 KiB
+        data = b''
+        while True:
+            part = s.recv(BUFF_SIZE)
+            data += part
+            if len(part) < BUFF_SIZE:
+                # either 0 or end of data
+                break
+        return data
