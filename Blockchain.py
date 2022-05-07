@@ -127,7 +127,7 @@ class Blockchain:
         while block is not None:
             temp.append(block)
             block = block.prev
-        print(temp)
+        # print(temp)
 
         data = {}
         while temp:
@@ -152,8 +152,9 @@ class Blockchain:
                     data[receiver] = data[receiver] + amount
                 else:
                     data[receiver] = amount
-            print(data)
+            # print(data)
             self.data = data
+        print(self.data)
 
     def createSetOfTransacations(self):
         temptr = []
@@ -200,7 +201,7 @@ class Blockchain:
                 pickledMessage = pickle.dumps(strReq)
                 s.sendall(pickledMessage)
                 data = self.receiveWhole(s)
-                print(data)
+                # print(data)
                 print(pickle.loads(data))
             except ConnectionRefusedError:
                 print("Connection cannot be established to node {0}".format(k))
@@ -223,7 +224,6 @@ class Blockchain:
         lst = message['list']
         # check the block id.
         print("Block id {0}".format(msg.id))
-        print("Node id {0}".format(nid))
         print("Node id {0}".format(nid))
         # if the block id already exist in the bc reject
         currentid = 0 if self.last is None else self.last.id
