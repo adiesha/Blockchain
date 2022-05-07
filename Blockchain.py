@@ -2,6 +2,7 @@ import pickle
 import random
 import socket
 import logging
+import threading
 
 from Block import Block
 from Transaction import Transaction
@@ -14,6 +15,7 @@ class Blockchain:
         self.first = None
         self.data = {}
         self.map = None
+        self.lock = threading.Lock()
 
     def __str__(self):
         return "Data {0}".format(self.data)
@@ -27,11 +29,13 @@ class Blockchain:
             block.prevhash = self.last.hash
         block.coinbase = (self.clientid, 100)
         block.mine()
+        self.lock.acquire()
         self.extractData()
         if self.validateBlock(block):
             self.addNewBlockToChain(block)
         else:
             print("Random transactions has a conflict try again")
+        self.lock.release()
 
     def getLastBlockId(self):
         if self.last is None:
@@ -216,8 +220,6 @@ class Blockchain:
         nid = message['id']
         msg = message['msg']
         lst = message['list']
-        print("hahahah")
-
         # check the block id.
         print("Block id {0}".format(msg.id))
         print("Node id {0}".format(nid))
@@ -241,9 +243,7 @@ class Blockchain:
             else:
                 currenttemp = currenttemp.prev
 
-        # print(filter)
-        # if filter is empty that means we need to add the list to the bc as a whole from the beginning
-        # if filter is not empty then we have a correct node that we can attach the next value
+        self.lock.acquire()
         if filter:
             currentBlock = filter[0]
             tempid = currentBlock.id + 1
@@ -269,47 +269,7 @@ class Blockchain:
                 else:
                     print("validation successful for block {0}".format(blnew))
                     self.addNewBlockToChain(blnew)
-            # print(self.validate(blnew))
-            # validateBlock transaction
-            # then validate the blocl
 
             tempid += 1
-
-        # # check whether we are far behind the blocks
-        # tempid = currentid + 1
-        # if msg.id - currentid > 0:
-        #     # find the block that needs to be added to the bc from the list
-        #     while tempid <= msg.id:
-        #         # find the block from the list
-        #         filter = [b for b in lst if b.id == tempid]
-        #         blnew = filter[0]
-        #         self.extractData()
-        #         if not self.validateBlock(blnew):
-        #             print("New block validation failed. Not going to add it to the blockchain Block Id {0}".format(
-        #                 blnew.id))
-        #             return False, "New block validation failed. Not going to add it to the blockchain Block Id {0}".format(
-        #                 blnew.id)
-        #         else:
-        #             # validate the block hashes
-        #             if not self.validate(blnew):
-        #                 print("Block hashes does not match")
-        #                 return False, "Block hashes does not match"
-        #             else:
-        #                 print("validation successful for block {0}".format(blnew))
-        #                 self.addNewBlockToChain(blnew)
-        #         # print(self.validate(blnew))
-        #         # validateBlock transaction
-        #         # then validate the blocl
-        #
-        #         tempid += 1
-
-        print(self.validateBlock(msg))
-        if not self.validateBlock(msg):
-            print("New block validation failed. Not going to add it to the blockchain")
-
-        # checking hash of the block is correct
-        print(msg.hash == msg.gethash())
-        print(self.validate(msg))
-        # if the block is the next block attach it
-
+        self.lock.release()
         pass

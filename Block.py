@@ -12,7 +12,7 @@ class Block:
         self.prevhash = ''.join('0' for i in range(64))
         self.hash = None
         self.maxNonce = 50000000
-        self.difficultySize = 4
+        self.difficultySize = 5
         self.difficultyprefix = ''.join('0' for i in range(self.difficultySize))
         self.trasactionstring = None
         self.coinbase = (None, 0)
