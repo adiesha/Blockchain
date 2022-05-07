@@ -27,7 +27,11 @@ class Blockchain:
             block.prevhash = self.last.hash
         block.coinbase = (self.clientid, 100)
         block.mine()
-        self.addNewBlockToChain(block)
+        self.extractData()
+        if self.validateBlock(block):
+            self.addNewBlockToChain(block)
+        else:
+            print("Random transactions has a conflict try again")
 
     def getLastBlockId(self):
         if self.last is None:
@@ -158,7 +162,7 @@ class Blockchain:
                 choice = random.choice(keys)
                 keys.remove(choice)
                 sendersbalance = self.data[choice]
-                amount = random.randint(1, sendersbalance)
+                amount = random.randint(0, sendersbalance)
                 tr = Transaction()
                 tr.sender = choice
                 tr.recipient = random.randint(0, 10)
@@ -226,33 +230,78 @@ class Blockchain:
         # validate the block for double spending else reject
         self.extractData()
 
-        # check whether we are far behind the blocks
-        tempid = currentid + 1
-        if msg.id - currentid > 0:
-            # find the block that needs to be added to the bc from the list
-            while tempid <= msg.id:
-                # find the block from the list
-                filter = [b for b in lst if b.id == tempid]
-                blnew = filter[0]
-                self.extractData()
-                if not self.validateBlock(blnew):
-                    print("New block validation failed. Not going to add it to the blockchain Block Id {0}".format(
-                        blnew.id))
-                    return False, "New block validation failed. Not going to add it to the blockchain Block Id {0}".format(
-                        blnew.id)
-                else:
-                    # validate the block hashes
-                    if not self.validate(blnew):
-                        print("Block hashes does not match")
-                        return False, "Block hashes does not match"
-                    else:
-                        print("validation successful for block {0}".format(blnew))
-                        self.addNewBlockToChain(blnew)
-                # print(self.validate(blnew))
-                # validateBlock transaction
-                # then validate the blocl
 
-                tempid += 1
+        # find the latest block that is common with the list and the bc
+        currenttemp = self.last
+        filter = []
+        while currenttemp is not None:
+            filter = [b for b in lst if b.hash == currenttemp.hash]
+            if filter:
+                break
+            else:
+                currenttemp = currenttemp.prev
+
+        # print(filter)
+        # if filter is empty that means we need to add the list to the bc as a whole from the beginning
+        # if filter is not empty then we have a correct node that we can attach the next value
+        if filter:
+            currentBlock = filter[0]
+            tempid = currentBlock.id + 1
+            self.last = currentBlock
+        else:
+            self.last = None
+            tempid = 1
+        while tempid <= msg.id:
+            # find the block from the list
+            NextBlock = [b for b in lst if b.id == tempid]
+            blnew = NextBlock[0]
+            self.extractData()
+            if not self.validateBlock(blnew):
+                print("New block validation failed. Not going to add it to the blockchain Block Id {0}".format(
+                    blnew.id))
+                return False, "New block validation failed. Not going to add it to the blockchain Block Id {0}".format(
+                    blnew.id)
+            else:
+                # validate the block hashes
+                if not self.validate(blnew):
+                    print("Block hashes does not match")
+                    return False, "Block hashes does not match"
+                else:
+                    print("validation successful for block {0}".format(blnew))
+                    self.addNewBlockToChain(blnew)
+            # print(self.validate(blnew))
+            # validateBlock transaction
+            # then validate the blocl
+
+            tempid += 1
+
+        # # check whether we are far behind the blocks
+        # tempid = currentid + 1
+        # if msg.id - currentid > 0:
+        #     # find the block that needs to be added to the bc from the list
+        #     while tempid <= msg.id:
+        #         # find the block from the list
+        #         filter = [b for b in lst if b.id == tempid]
+        #         blnew = filter[0]
+        #         self.extractData()
+        #         if not self.validateBlock(blnew):
+        #             print("New block validation failed. Not going to add it to the blockchain Block Id {0}".format(
+        #                 blnew.id))
+        #             return False, "New block validation failed. Not going to add it to the blockchain Block Id {0}".format(
+        #                 blnew.id)
+        #         else:
+        #             # validate the block hashes
+        #             if not self.validate(blnew):
+        #                 print("Block hashes does not match")
+        #                 return False, "Block hashes does not match"
+        #             else:
+        #                 print("validation successful for block {0}".format(blnew))
+        #                 self.addNewBlockToChain(blnew)
+        #         # print(self.validate(blnew))
+        #         # validateBlock transaction
+        #         # then validate the blocl
+        #
+        #         tempid += 1
 
         print(self.validateBlock(msg))
         if not self.validateBlock(msg):
