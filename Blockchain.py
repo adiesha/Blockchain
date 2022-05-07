@@ -31,11 +31,12 @@ class Blockchain:
         block.mine()
         self.lock.acquire()
         self.extractData()
-        if self.validateBlock(block):
+        if self.validateBlock(block) and self.validate(block):
             self.addNewBlockToChain(block)
         else:
             print("Random transactions has a conflict try again")
         self.lock.release()
+        self.sendMessage()
 
     def getLastBlockId(self):
         if self.last is None:
