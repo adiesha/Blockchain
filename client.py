@@ -193,7 +193,9 @@ class Client():
                             print(unpickledRequest)
                             nid = unpickledRequest['id']
                             msg = unpickledRequest['msg']
-                            print(nid, msg)
+                            lst = unpickledRequest['list']
+                            print(nid, msg, lst)
+                            self.bc.receiveMessage(unpickledRequest)
 
                             # self.bc.receiveMessage((np, mtx, nid))
 
@@ -262,6 +264,9 @@ class Client():
                 break
             elif resp[0] == 'e':
                 self.bc.extractData()
+            elif resp[0] == 'g':
+                blockid = int(input("input the block id"))
+                print(self.bc.getBlock(blockid))
 
     def main(self):
         print('Number of arguments:', len(sys.argv), 'arguments.')

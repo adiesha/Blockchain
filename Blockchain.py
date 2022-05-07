@@ -64,6 +64,45 @@ class Blockchain:
         if self.first is None:
             self.first = self.last
 
+    def validate(self, block):
+        # hash the block and check whether it matches with the hash inside it.
+        if block.hash == block.gethash():
+            print("Block id {0} hash is correct".format(block.id))
+        else:
+            print("Incorrect hash in the block {0} vs {1}".format(block.hash, block.gethash()))
+            return False
+
+        # check the previous hash
+        # search the previous block and find it
+        prevblock = self.getBlock(block.id - 1)
+        if prevblock is None:
+            if block.id == 1:
+                if block.prevhash == ''.join('0' for i in range(64)):
+                    return True
+            else:
+                print(
+                    "block cannot be validated because blockchain does not have its previous block and block is not the initial block")
+                print("Block id {0} Block hash {1} block's prev hash {2}".format(block.id, block.hash, block.prevhash))
+                return False
+        if prevblock.hash == block.prevhash:
+            print("Block is validated against its hash and its previous blocks hash")
+            return True
+        else:
+            print("Previous hash is incorrect {0} vs {1}".format(prevblock.hash, block.prevhash))
+            return False
+
+    def getBlock(self, id):
+        temp = self.last
+        if temp is None:
+            return None
+        else:
+            while temp is not None:
+                if id == temp.id:
+                    return temp
+                else:
+                    temp = temp.prev
+            return None
+
     def printChain(self):
         temp = self.last
         while (True):
@@ -142,6 +181,12 @@ class Blockchain:
                 strReq = {}
                 strReq['id'] = self.clientid
                 strReq['msg'] = m
+                temp = []
+                end = self.last
+                while (end is not None):
+                    temp.append(end)
+                    end = end.prev
+                strReq['list'] = temp
 
                 pickledMessage = pickle.dumps(strReq)
                 s.sendall(pickledMessage)
@@ -162,3 +207,60 @@ class Blockchain:
                 # either 0 or end of data
                 break
         return data
+
+    def receiveMessage(self, message):
+        nid = message['id']
+        msg = message['msg']
+        lst = message['list']
+        print("hahahah")
+
+        # check the block id.
+        print("Block id {0}".format(msg.id))
+        print("Node id {0}".format(nid))
+        print("Node id {0}".format(nid))
+        # if the block id already exist in the bc reject
+        currentid = 0 if self.last is None else self.last.id
+        if currentid >= msg.id:
+            print("New block already exist. current last block {0}: Received block {1}".format(self.last, msg))
+            return False, "New block already exist. current last block {0}: Received block {1}".format(self.last, msg)
+        # validate the block for double spending else reject
+        self.extractData()
+
+        # check whether we are far behind the blocks
+        tempid = currentid + 1
+        if msg.id - currentid > 0:
+            # find the block that needs to be added to the bc from the list
+            while tempid <= msg.id:
+                # find the block from the list
+                filter = [b for b in lst if b.id == tempid]
+                blnew = filter[0]
+                self.extractData()
+                if not self.validateBlock(blnew):
+                    print("New block validation failed. Not going to add it to the blockchain Block Id {0}".format(
+                        blnew.id))
+                    return False, "New block validation failed. Not going to add it to the blockchain Block Id {0}".format(
+                        blnew.id)
+                else:
+                    # validate the block hashes
+                    if not self.validate(blnew):
+                        print("Block hashes does not match")
+                        return False, "Block hashes does not match"
+                    else:
+                        print("validation successful for block {0}".format(blnew))
+                        self.addNewBlockToChain(blnew)
+                # print(self.validate(blnew))
+                # validateBlock transaction
+                # then validate the blocl
+
+                tempid += 1
+
+        print(self.validateBlock(msg))
+        if not self.validateBlock(msg):
+            print("New block validation failed. Not going to add it to the blockchain")
+
+        # checking hash of the block is correct
+        print(msg.hash == msg.gethash())
+        print(self.validate(msg))
+        # if the block is the next block attach it
+
+        pass

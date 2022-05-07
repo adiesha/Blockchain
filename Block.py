@@ -17,6 +17,12 @@ class Block:
         self.trasactionstring = None
         self.coinbase = (None, 0)
 
+    def gethash(self):
+        text = self.gethashablestring()
+        encodedText = text.encode()
+        temphash = hashlib.sha256(encodedText).hexdigest()
+        return temphash
+
     def mine(self):
         start = time.perf_counter()
         for i in range(self.maxNonce):
