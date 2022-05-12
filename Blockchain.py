@@ -83,6 +83,7 @@ class Blockchain:
 
         if self.first is None:
             self.first = self.last
+        self.persistToStorage()
 
     def validate(self, block):
         # hash the block and check whether it matches with the hash inside it.
@@ -283,4 +284,16 @@ class Blockchain:
 
             tempid += 1
         self.lock.release()
-        pass
+
+    def persistToStorage(self):
+        try:
+            file = open("log/bc-persist-{0}".format(self.clientid), "w")
+            temp = self.last
+            while temp is not None:
+                file.write(str(temp))
+                temp = temp.prev
+            file.close()
+
+        except Exception as e:
+            print("Exception occurred initializing persistent storage on node {0} e: {1}".format(self.clientid, e))
+

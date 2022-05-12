@@ -321,8 +321,6 @@ class Client():
             blockchain = Blockchain(self.seq)
             blockchain.map = self.map
             self.bc = blockchain
-            # self.createThreadToListen()
-            # self.createHeartBeatThread()
             self.createThreadToListen()
             self.createTxServiceThread()
             self.menu(blockchain)
