@@ -1,7 +1,7 @@
+import logging
 import pickle
 import random
 import socket
-import logging
 import threading
 
 from Block import Block
@@ -23,6 +23,7 @@ class Blockchain:
     def createAblock(self, transactions):
         newblockid = self.getLastBlockId() + 1
         block = Block(newblockid)
+        block.miner = self.clientid
         block.addTransactions(transactions)
         # add prev block hash
         if self.last is not None:
@@ -32,11 +33,21 @@ class Blockchain:
         self.lock.acquire()
         self.extractData()
         if self.validateBlock(block) and self.validate(block):
-            self.addNewBlockToChain(block)
+            if self.last is not None:
+                if self.last.id < block.id:
+                    self.addNewBlockToChain(block)
+                    self.sendMessage()
+                else:
+                    print(
+                        "Block id of the last block {0}->Block id of the new block {1}".format(self.last.id, block.id))
+                    print("A Block with the same id was added to the BC while the block was being mined. Cannot add a "
+                          "block with the same id")
+            else:
+                self.addNewBlockToChain(block)
+                self.sendMessage()
         else:
             print("Random transactions has a conflict try again")
         self.lock.release()
-        self.sendMessage()
 
     def getLastBlockId(self):
         if self.last is None:
@@ -232,7 +243,6 @@ class Blockchain:
             return False, "New block already exist. current last block {0}: Received block {1}".format(self.last, msg)
         # validate the block for double spending else reject
         self.extractData()
-
 
         # find the latest block that is common with the list and the bc
         currenttemp = self.last
