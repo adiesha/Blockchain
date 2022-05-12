@@ -16,6 +16,7 @@ class Block:
         self.difficultyprefix = ''.join('0' for i in range(self.difficultySize))
         self.trasactionstring = None
         self.coinbase = (None, 0)
+        self.miner = 0
 
     def gethash(self):
         text = self.gethashablestring()
@@ -80,9 +81,19 @@ class Block:
         for t in self.transactions:
             print(t)
 
+    def getPrintableTransactionString(self):
+        temp = ""
+        for t in self.transactions:
+            temp = temp + str(t) + "\n"
+
+        return temp
+
     def __str__(self):
-        return "BlockID: {0} Nonce: {1} CoindBase: {2} Tr: {3} PreviousHash : {4} Hash:{5}".format(self.id, self.nonce,
-                                                                                                   self.coinbase,
-                                                                                                   self.transactions,
-                                                                                                   self.prevhash,
-                                                                                                   self.hash)
+        return "------------------------------------------------\nBlockID: {0} \nNonce: {1} \nCoindBase: {2} \nTr: \n{3} \nHash: {4} \nPreviousHash :{5} \nMiner: {6}\n------------------------------------------------\n".format(
+            self.id,
+            self.nonce,
+            self.coinbase,
+            self.getPrintableTransactionString(),
+            self.hash[0:14],
+            self.prevhash[0:14],
+            self.miner)
