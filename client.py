@@ -1,12 +1,10 @@
 # echo-client.py
-import datetime
 import json
 import logging
 import os
 import pickle
 import random
 import socket
-import string
 import sys
 import threading
 import time
@@ -239,34 +237,46 @@ class Client():
 
     def menu(self, bc):
         while True:
+            print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
             print("Display Blockchain\t[d]")
             print("Display Last Block\t[l]")
             print("Create new block\t[b]")
-            print("Press e to print diagnostics")
+            print("Display specific block\t[g]")
+            print("Display summary of the blockchain\t[e]")
             print("Quit    \t[q]")
+            print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 
             resp = input("Choice: ").lower().split()
             if len(resp) < 1:
                 print("Not a correct input")
                 continue
             if resp[0] == 'd':
+                print("~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                 print("Display Blockchain")
                 bc.printChain()
-                # d.displayCalendar()
+                print("~~~~~~~~~~~~~~~~~~~~~~~~~~~")
             elif resp[0] == 'l':
+                print("====================")
                 print(bc.last)
+                print("====================")
             elif resp[0] == 'b':
+                print("*******************************************")
                 self.bc.createAblock(bc.createSetOfTransacations())
+                print("*******************************************")
             elif resp[0] == 's':
                 self.bc.sendMessage()
             elif resp[0] == 'q':
                 print("Quitting")
                 break
             elif resp[0] == 'e':
+                print("####################################")
                 self.bc.extractData()
+                print("####################################")
             elif resp[0] == 'g':
-                blockid = int(input("input the block id"))
+                print("====================")
+                blockid = int(input("input the block id: "))
                 print(self.bc.getBlock(blockid))
+                print("====================")
 
     def main(self):
         print('Number of arguments:', len(sys.argv), 'arguments.')
