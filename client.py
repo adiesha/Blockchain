@@ -25,6 +25,7 @@ class Client():
         self.heartbeatInterval = hb
         self.togglehb = toggleHB
         self.clientmutex = threading.Lock()
+        self.txservcflag = False
 
     def createJSONReq(self, typeReq, nodes=None, slot=None):
         # Initialize node
@@ -154,6 +155,19 @@ class Client():
         thread.start()
         return thread
 
+    def createTxServiceThread(self):
+        thread = threading.Thread(target=self.txservice)
+        thread.daemon = True
+        thread.start()
+        return thread
+
+    def txservice(self):
+        while True:
+            time.sleep(15)
+            if self.txservcflag:
+                print("Transaction Service invoked. Trying to create a new block in node {0}".format(self.seq))
+                self.bc.createAblock(self.bc.createSetOfTransacations())
+
     #
     # def createThreadToBroadcast(self, event, nodes, slot):
     #     thread = threading.Thread(target=self.broadcast(event, nodes, slot))
@@ -220,20 +234,6 @@ class Client():
                         self.clientmutex.release()
                         break
 
-    # def heartbeat(self):
-    #     while (True):
-    #         time.sleep(random.randint(10, self.heartbeatInterval))
-    #         self.clientmutex.acquire()
-    #         if self.togglehb:
-    #             # print("heartbeating")
-    #             logging.debug("heartbeating")
-    #             # do the hearbeat
-    #             nodes = sorted(self.map.keys())
-    #             # remove the self node
-    #             nodes.remove(self.seq)
-    #             for n in nodes:
-    #                 self.dd.sendViaSocket(self.dd.sendMessage(n), n)
-    #         self.clientmutex.release()
 
     def menu(self, bc):
         while True:
@@ -243,6 +243,7 @@ class Client():
             print("Create new block\t[b]")
             print("Display specific block\t[g]")
             print("Display summary of the blockchain\t[e]")
+            print("Press t to Toggle the transaction service\t [t]")
             print("Quit    \t[q]")
             print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 
@@ -277,6 +278,11 @@ class Client():
                 blockid = int(input("input the block id: "))
                 print(self.bc.getBlock(blockid))
                 print("====================")
+            elif resp[0] == 't':
+                self.txservcflag = not self.txservcflag
+                print("----------------------------------------------------")
+                print("Toggling txservice flag->{0}".format(self.txservcflag))
+                print("::::::::::::::::::::::::::::::::::::::::::::::::::::")
 
     def main(self):
         print('Number of arguments:', len(sys.argv), 'arguments.')
@@ -318,6 +324,7 @@ class Client():
             # self.createThreadToListen()
             # self.createHeartBeatThread()
             self.createThreadToListen()
+            self.createTxServiceThread()
             self.menu(blockchain)
 
 
